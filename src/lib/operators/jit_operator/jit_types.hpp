@@ -20,7 +20,7 @@ namespace opossum {
 // We need a boolean data type in the JitOperatorWrapper, but don't want to add it to
 // DATA_TYPE_INFO to avoid costly template instantiations.
 // See "all_type_variant.hpp" for details.
-#define JIT_DATA_TYPE_INFO ((bool, Bool, "bool")) DATA_TYPE_INFO
+#define JIT_DATA_TYPE_INFO ((bool, Bool, "bool"))((ValueID::base_type, ValueID, "bool")) DATA_TYPE_INFO
 
 #define JIT_VARIANT_VECTOR_MEMBER(r, d, type) \
   std::vector<BOOST_PP_TUPLE_ELEM(3, 0, type)> BOOST_PP_TUPLE_ELEM(3, 1, type);
@@ -34,8 +34,8 @@ namespace opossum {
 // Expression uses int32_t to store booleans (see src/lib/expression/evaluation/expression_evaluator.hpp)
 using Bool = int32_t;
 static constexpr auto DataTypeBool = DataType::Int;
-using JitValueID = int32_t;
-static constexpr auto DataTypeValueID = DataType::Int;
+using JitValueID = ValueID::base_type;
+static constexpr auto DataTypeValueID = DataType::ValueID;
 
 /* A brief overview of the type system and the way values are handled in the JitOperatorWrapper:
  *

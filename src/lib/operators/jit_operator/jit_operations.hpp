@@ -47,8 +47,10 @@ namespace opossum {
 
 #define JIT_COMPUTE_CASE(r, types)                                                                                   \
   case static_cast<uint8_t>(JIT_GET_ENUM_VALUE(0, types)) << 8 | static_cast<uint8_t>(JIT_GET_ENUM_VALUE(1, types)): \
-    catching_func(lhs.get<JIT_GET_DATA_TYPE(0, types)>(context), rhs.get<JIT_GET_DATA_TYPE(1, types)>(context),      \
-                  result);                                                                                           \
+    if constexpr (std::is_same_v<JIT_GET_DATA_TYPE(0, types), ValueID::base_type> ==                                 \
+                  std::is_same_v<JIT_GET_DATA_TYPE(1, types), ValueID::base_type>)                                   \
+      catching_func(lhs.get<JIT_GET_DATA_TYPE(0, types)>(context), rhs.get<JIT_GET_DATA_TYPE(1, types)>(context),    \
+                    result);                                                                                         \
     break;
 
 #define JIT_COMPUTE_TYPE_CASE(r, types)                                                                              \
@@ -208,7 +210,11 @@ DataType jit_compute_type(const T& op_func, const DataType lhs, const DataType r
       [&](const auto& typed_lhs, const auto& typed_rhs) -> decltype(op_func(typed_lhs, typed_rhs), DataType()) {
     using ResultType = decltype(op_func(typed_lhs, typed_rhs));
     // This templated function returns the DataType enum value for a given ResultType.
-    return data_type_from_type<ResultType>();
+    if constexpr (std::is_same_v<ResultType, ValueID::base_type>) {
+      return DataType::ValueID;
+    } else {
+      return data_type_from_type<ResultType>();
+    }
   };
 
   const auto catching_func =
