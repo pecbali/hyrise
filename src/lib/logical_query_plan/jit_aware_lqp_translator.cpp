@@ -233,10 +233,14 @@ float compute_weigth(const std::shared_ptr<AbstractLQPNode> &node, const std::sh
           if (predicate_vars.predicate_condition == PredicateCondition::Between) {
             if (is_variant(predicate_vars.value) && is_variant(*predicate_vars.value2)) {
               new_predicate = std::make_shared<BetweenExpression>(column_expression, value_(boost::get<AllTypeVariant>(predicate_vars.value)), value_(boost::get<AllTypeVariant>(*predicate_vars.value2)));
+            } else {
+              new_predicate = std::make_shared<BetweenExpression>(column_expression, value_(AllTypeVariant(1)), value_(AllTypeVariant(1)));
             }
           } else {
             if (is_variant(predicate_vars.value)) {
               new_predicate = std::make_shared<BinaryPredicateExpression>(predicate_vars.predicate_condition, column_expression, expression_functional::value_(boost::get<AllTypeVariant>(predicate_vars.value)));
+            } else {
+              new_predicate = std::make_shared<BinaryPredicateExpression>(predicate_vars.predicate_condition, column_expression, expression_functional::value_(AllTypeVariant(1)));
             }
           }
           if (new_predicate) {
@@ -388,9 +392,11 @@ std::shared_ptr<JitOperatorWrapper> JitAwareLQPTranslator::_try_translate_sub_pl
     filter_node = filter_node->left_input();
   }
 
-  float selectivity = 0;
+  float selectivity = -1;
+  int input_row_count = -1;
   try {
-    if (const auto input_row_count = input_node->get_statistics()->row_count()) {
+    input_row_count = input_node->get_statistics()->row_count();
+    if (input_row_count) {
       selectivity = filter_node->get_statistics()->row_count() / input_row_count;
     }
   } catch (std::logic_error) {
@@ -523,11 +529,11 @@ std::shared_ptr<JitOperatorWrapper> JitAwareLQPTranslator::_try_translate_sub_pl
   /*
   if (weight < 2) {  // selectivity < 0.001
     // * /
-    std::cout << "selectivity: " << selectivity << " weight: " << weight << std::endl;
+    std::cout << "input_row_count: " << input_row_count << " selectivity: " << selectivity << " weight: " << weight << std::endl;
     std::cout << jit_operator->description(DescriptionMode::MultiLine) << std::endl << std::flush;
     // / *
   } else {
-    std::cout << "------------------ selectivity: " << selectivity << " weight: " << weight << std::endl;
+    std::cout << "------------------ input_row_count: " << input_row_count << " selectivity: " << selectivity << " weight: " << weight << std::endl;
     std::cout << jit_operator->description(DescriptionMode::MultiLine) << std::endl << std::flush;
     std::cout << "---------------------------------------------------------------------------------" << std::endl;
   }

@@ -2,6 +2,7 @@ compare () {
 	if [ -f $2 ]; then
 		if [ -f $3 ]; then
 			echo $1
+			echo "scripts/compare_benchmarks.py $2 $3"
 			python scripts/compare_benchmarks.py $2 $3
 		fi
 	fi
