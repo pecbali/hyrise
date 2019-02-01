@@ -11,6 +11,7 @@
 #include "optimizer/strategy/predicate_placement_rule.hpp"
 #include "strategy/chunk_pruning_rule.hpp"
 #include "strategy/column_pruning_rule.hpp"
+#include "strategy/common_subplan_rule.hpp"
 #include "strategy/constant_calculation_rule.hpp"
 #include "strategy/exists_reformulation_rule.hpp"
 #include "strategy/index_scan_rule.hpp"
@@ -109,6 +110,8 @@ std::shared_ptr<Optimizer> Optimizer::create_default_optimizer() {
   optimizer->add_rule(std::make_shared<PredicateReorderingRule>());
 
   optimizer->add_rule(std::make_shared<IndexScanRule>());
+
+  optimizer->add_rule(std::make_shared<CommonSubplanRule>());
 
   return optimizer;
 }

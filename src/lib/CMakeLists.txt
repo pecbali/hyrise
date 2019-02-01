@@ -281,6 +281,8 @@ set(
     optimizer/strategy/chunk_pruning_rule.hpp
     optimizer/strategy/column_pruning_rule.cpp
     optimizer/strategy/column_pruning_rule.hpp
+    optimizer/strategy/common_subplan_rule.cpp
+    optimizer/strategy/common_subplan_rule.hpp
     optimizer/strategy/constant_calculation_rule.cpp
     optimizer/strategy/constant_calculation_rule.hpp
     optimizer/strategy/exists_reformulation_rule.cpp

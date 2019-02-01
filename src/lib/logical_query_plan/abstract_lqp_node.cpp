@@ -262,7 +262,7 @@ void AbstractLQPNode::_print_impl(std::ostream& out) const {
     if (node->right_input()) inputs.emplace_back(node->right_input());
     return inputs;
   };
-  const auto node_print_fn = [](const auto& node, auto& stream) { stream << node->description(); };
+  const auto node_print_fn = [](const auto& node, auto& stream) { stream << node.get() << node->description(); };
   print_directed_acyclic_graph<const AbstractLQPNode>(shared_from_this(), get_inputs_fn, node_print_fn, out);
 }
 
