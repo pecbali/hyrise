@@ -87,6 +87,8 @@ namespace opossum {
 std::shared_ptr<Optimizer> Optimizer::create_default_optimizer() {
   auto optimizer = std::make_shared<Optimizer>();
 
+  optimizer->add_rule(std::make_shared<CommonSubplanRule>());
+
   // Run pruning just once since the rule would otherwise insert the pruning ProjectionNodes multiple times.
   optimizer->add_rule(std::make_shared<ConstantCalculationRule>());
 
@@ -110,8 +112,6 @@ std::shared_ptr<Optimizer> Optimizer::create_default_optimizer() {
   optimizer->add_rule(std::make_shared<PredicateReorderingRule>());
 
   optimizer->add_rule(std::make_shared<IndexScanRule>());
-
-  optimizer->add_rule(std::make_shared<CommonSubplanRule>());
 
   return optimizer;
 }
