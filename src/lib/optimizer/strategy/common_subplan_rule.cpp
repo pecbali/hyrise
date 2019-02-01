@@ -55,6 +55,7 @@ void apply_to_impl(const std::shared_ptr<AbstractLQPNode>& node, std::unordered_
         mapping.insert(m);
       }
       node->set_input(input_side, *it);
+      std::cout << "Reusing a plan, yay!" << std::endl;
       continue;
     } else {
       nodes.emplace(node);
