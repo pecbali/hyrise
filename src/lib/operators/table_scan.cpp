@@ -212,7 +212,8 @@ std::unique_ptr<AbstractTableScanImpl> TableScan::create_impl() const {
    * an expression.
    */
 
-  auto resolved_predicate = _resolve_uncorrelated_subqueries(_predicate);
+  auto resolved_predicate = _predicate;
+  // auto resolved_predicate = _resolve_uncorrelated_subqueries(_predicate);
 
   if (const auto binary_predicate_expression =
           std::dynamic_pointer_cast<BinaryPredicateExpression>(resolved_predicate)) {

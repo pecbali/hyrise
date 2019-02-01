@@ -931,7 +931,6 @@ std::shared_ptr<const Table> ExpressionEvaluator::_evaluate_subquery_expression_
 
   // TODO(moritz) deep_copy() shouldn't be necessary for every row if we could re-execute PQPs...
   auto row_pqp = !expression.is_correlated() ? expression.pqp : expression.pqp->deep_copy();
-  if (row_pqp == expression.pqp) std::cout << "coool reusing" << std::endl;
   row_pqp->set_parameters(parameters);
 
   const auto tasks = OperatorTask::make_tasks_from_operator(row_pqp, CleanupTemporaries::Yes);
