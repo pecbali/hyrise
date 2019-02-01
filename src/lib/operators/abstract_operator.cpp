@@ -78,7 +78,7 @@ std::shared_ptr<const Table> AbstractOperator::get_output() const {
   return _output;
 }
 
-void AbstractOperator::clear_output() { _output = nullptr; }
+void AbstractOperator::clear_output() { /* _output = nullptr; */ }
 
 const std::string AbstractOperator::description(DescriptionMode description_mode) const { return name(); }
 
