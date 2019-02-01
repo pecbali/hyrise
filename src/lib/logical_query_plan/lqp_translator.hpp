@@ -9,6 +9,23 @@
 
 namespace opossum {
 
+  struct myhash
+  {
+    std::size_t operator()(const std::shared_ptr<const AbstractLQPNode>& k) const
+    {
+      return 0;
+    }
+  };
+
+  struct myequals
+{
+public:
+  bool operator() (std::shared_ptr<const AbstractLQPNode> const& t1, std::shared_ptr<const AbstractLQPNode> const& t2) const
+  {
+    return *t1 == *t2;
+  }
+};
+
 class AbstractOperator;
 class TransactionContext;
 class AbstractExpression;
@@ -68,7 +85,7 @@ class LQPTranslator {
       const std::shared_ptr<AbstractLQPNode>& node) const;
 
   // Cache operator subtrees by LQP node to avoid executing operators below a diamond shape multiple times
-  mutable std::unordered_map<std::shared_ptr<const AbstractLQPNode>, std::shared_ptr<AbstractOperator>>
+  mutable std::unordered_map<std::shared_ptr<const AbstractLQPNode>, std::shared_ptr<AbstractOperator>, myhash, myequals>
       _operator_by_lqp_node;
 };
 
