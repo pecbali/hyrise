@@ -5,6 +5,7 @@
 
 #include "types.hpp"
 
+#include "scheduler/job_task.hpp"
 #include "sql_pipeline.hpp"
 #include "sql_pipeline_statement.hpp"
 
@@ -53,6 +54,8 @@ class SQLPipelineBuilder final {
   SQLPipelineBuilder& dont_cleanup_temporaries();
 
   SQLPipeline create_pipeline() const;
+
+  std::shared_ptr<JobTask> create_and_execute_pipeline(std::unique_ptr<SQLPipeline>& pipeline) const;
 
   /**
    * @param parsed_sql  for usage from SQLPipeline to pass along to SQLPipelineStatement, everyone else leaves this as
