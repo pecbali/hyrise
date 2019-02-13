@@ -15,6 +15,7 @@
 #include "storage/chunk.hpp"
 #include "storage/chunk_encoder.hpp"
 #include "storage/storage_manager.hpp"
+#include "tasks/pipeline_execution_task.hpp"
 #include "tpch/tpch_table_generator.hpp"
 #include "utils/check_table_equal.hpp"
 #include "utils/format_duration.hpp"
@@ -257,7 +258,8 @@ void BenchmarkRunner::_benchmark_individual_queries() {
         };
 
         auto query_tasks = _schedule_or_execute_query(query_id, on_query_done);
-        tasks.insert(tasks.end(), query_tasks.begin(), query_tasks.end());
+        // tasks.insert(tasks.end(), query_tasks.begin(), query_tasks.end());
+        tasks.push_back(std::move(query_tasks[0]));
       } else {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
       }
@@ -280,6 +282,7 @@ void BenchmarkRunner::_benchmark_individual_queries() {
   }
 }
 
+// TODO(toni): Check if this still wörks
 void BenchmarkRunner::_warmup_query(const QueryID query_id) {
   if (_config.warmup_duration == Duration{0}) {
     return;
@@ -335,22 +338,22 @@ std::vector<std::shared_ptr<AbstractTask>> BenchmarkRunner::_schedule_query(
     const QueryID query_id, const std::function<void()>& done_callback) {
   auto sql = _query_generator->build_query(query_id);
 
-  auto query_tasks = std::vector<std::shared_ptr<AbstractTask>>();
-
   auto pipeline_builder = SQLPipelineBuilder{sql}.with_mvcc(_config.use_mvcc);
   if (_config.enable_visualization) pipeline_builder.dont_cleanup_temporaries();
-  auto pipeline = pipeline_builder.create_pipeline();
 
-  auto tasks_per_statement = pipeline.get_tasks();
-  tasks_per_statement.back().back()->set_done_callback(done_callback);
+  auto pipeline_execution_task = std::make_shared<PipelineExecutionTask>(std::move(pipeline_builder));
+  pipeline_execution_task->set_done_callback(done_callback);
 
-  for (auto tasks : tasks_per_statement) {
-    CurrentScheduler::schedule_tasks(tasks);
-    query_tasks.insert(query_tasks.end(), tasks.begin(), tasks.end());
-  }
+  auto query_tasks = std::vector<std::shared_ptr<AbstractTask>>();
+  query_tasks.push_back(pipeline_execution_task);
+  // auto help = std::vector<std::shared_ptr<AbstractTask>>{pipeline_execution_task};
+  // query_tasks.emplace_back(pipeline_execution_task);
 
+  CurrentScheduler::schedule_tasks(query_tasks);
+
+  // TODO(toni): make this wörk again
   // If necessary, keep plans for visualization
-  _store_plan(query_id, pipeline);
+  // _store_plan(query_id, pipeline);
 
   return query_tasks;
 }

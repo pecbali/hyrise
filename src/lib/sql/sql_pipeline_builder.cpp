@@ -35,15 +35,6 @@ SQLPipelineBuilder& SQLPipelineBuilder::dont_cleanup_temporaries() {
   return *this;
 }
 
-std::shared_ptr<JobTask> SQLPipelineBuilder::create_and_execute_pipeline(
-    std::unique_ptr<SQLPipeline>& pipeline_ptr) const {
-  auto pipeline_creation_task = std::make_shared<JobTask>([*this, &pipeline_ptr] {
-    pipeline_ptr = std::move(std::make_unique<SQLPipeline>(create_pipeline()));
-    pipeline_ptr->get_result_tables();
-  });
-  return pipeline_creation_task;
-}
-
 SQLPipeline SQLPipelineBuilder::create_pipeline() const {
   DTRACE_PROBE1(HYRISE, CREATE_PIPELINE, reinterpret_cast<uintptr_t>(this));
   auto lqp_translator = _lqp_translator ? _lqp_translator : std::make_shared<LQPTranslator>();
