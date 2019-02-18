@@ -25,6 +25,7 @@ add_executable(
 
 target_link_libraries(
     hyrisePlayground
+    hyriseBenchmarkLib
     ${HYRISE_LIBRARY_WITH_ALL_SYMBOLS}
 )
 

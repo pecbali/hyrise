@@ -11,13 +11,12 @@ class SQLPipeline;
 
 class PipelineExecutionTask : public AbstractTask {
  public:
-  PipelineExecutionTask() = delete;
   explicit PipelineExecutionTask(SQLPipelineBuilder builder);
 
   std::unique_ptr<SQLPipeline> get_sql_pipeline();
 
  protected:
-  void _on_execute();
+  void _on_execute() override;
 
  private:
   SQLPipelineBuilder _builder;
