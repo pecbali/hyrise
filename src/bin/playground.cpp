@@ -32,7 +32,6 @@ void new_approach() {
     task_list.emplace_back(pipeline_task);
   }
 
-  std::cout << task_list.size() << std::endl;
   CurrentScheduler::schedule_and_wait_for_tasks(task_list);
 
   auto pipeline = std::dynamic_pointer_cast<PipelineExecutionTask>(task_list.back())->get_sql_pipeline();
