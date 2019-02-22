@@ -29,16 +29,16 @@ std::map<std::string, std::shared_ptr<opossum::Table>> JitTableGenerator::genera
                         [&](std::vector<size_t> indices) { return generator.random_number(0, 99999); });
     add_nullable_column<int32_t>(columns_by_chunk, column_definitions, "E", cardinalities,
                                  [&](std::vector<size_t> indices) { return generator.random_number(0, 99999); },
-                                 [&](std::vector<size_t> indices) { return false; });
+                                 [&](std::vector<size_t> indices) { return indices[0]%10 == 0; });
     add_nullable_column<int32_t>(columns_by_chunk, column_definitions, "F", cardinalities,
                                  [&](std::vector<size_t> indices) { return generator.random_number(0, 99999); },
-                                 [&](std::vector<size_t> indices) { return false; });
+                                 [&](std::vector<size_t> indices) { return indices[0]%2 == 0; });
     add_nullable_column<int32_t>(columns_by_chunk, column_definitions, "G", cardinalities,
                                  [&](std::vector<size_t> indices) { return generator.random_number(0, 99999); },
                                  [&](std::vector<size_t> indices) { return false; });
     add_nullable_column<int32_t>(columns_by_chunk, column_definitions, "H", cardinalities,
                                  [&](std::vector<size_t> indices) { return generator.random_number(0, 99999); },
-                                 [&](std::vector<size_t> indices) { return false; });
+                                 [&](std::vector<size_t> indices) { return true; });
 
     add_column<int32_t>(columns_by_chunk, column_definitions, "X0", cardinalities,
                         [&](std::vector<size_t> indices) { return 0; });
