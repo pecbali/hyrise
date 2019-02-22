@@ -79,12 +79,17 @@ using JitValueID = int32_t;
 static constexpr auto DataTypeValueID = DataType::Int;
 
 
-template <typename T>
-struct Value {
-  // Value<bool>(const bool is_null = false, const bool value = false) : is_null(is_null), value(value) {}
-  // Value(const bool is_null = false, const Value value = Value()) : is_null(is_null), value(value) {}
-  bool is_null;
-  T value;
+template <typename ValueType>
+struct Value : public std::optional<ValueType> {
+  using value_type = ValueType;
+  Value() : std::optional<ValueType>{std::nullopt} {}
+  Value(const bool _is_null, const ValueType _value) : std::optional<ValueType>{!_is_null ? std::optional<ValueType>{_value} : std::nullopt} {}
+  // bool is_null;
+  // ValueType value;
+  __attribute__((always_inline))
+  bool is_null() const {
+    return !std::optional<ValueType>::has_value();
+  }
 };
 
 /* A brief overview of the type system and the way values are handled in the JitOperatorWrapper:

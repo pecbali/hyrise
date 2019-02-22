@@ -42,7 +42,7 @@ JitExpression::JitExpression(const std::shared_ptr<const JitExpression>& left_ch
 #if JIT_READER_WRAPPER
   if (_expression_type == JitExpressionType::Like || _expression_type == JitExpressionType::NotLike) {
     JitRuntimeContext context;
-    const auto like_pattern = right_child->compute_and_get<std::string>(context).value;
+    const auto like_pattern = right_child->compute_and_get<std::string>(context).value();
     _matcher = std::make_shared<LikeMatcher>(like_pattern);
   }
 #endif
@@ -273,18 +273,18 @@ Value<T> JitExpression::compute_and_get(JitRuntimeContext& context) const {
 #if JIT_READER_WRAPPER
       const auto& result = _input_segment_wrapper->read_and_get_value(context, T());
       if (_also_set) {
-        _result_value.set<T>(result.value, context);
+        _result_value.set<T>(result.value(), context);
         if (_result_value.is_nullable()) {
-          _result_value.set_is_null(result.is_null, context);
+          _result_value.set_is_null(result.is_null(), context);
         }
       }
       return result;
 #else
       const auto& result = return context.inputs[_reader_index]->read_and_get_value(context, T());
       if (_also_set) {
-        _result_value.set<T>(result.value, context);
+        _result_value.set<T>(result.value(), context);
         if (_result_value.is_nullable()) {
-          _result_value.set_is_null(result.is_null, context);
+          _result_value.set_is_null(result.is_null(), context);
         }
       }
       return result;
@@ -329,12 +329,12 @@ Value<T> JitExpression::compute_and_get(JitRuntimeContext& context) const {
       case JitExpressionType::NotLike: {
         if constexpr (std::is_same_v<T, bool>) {
           const auto& operand = _left_child->compute_and_get<std::string>(context);
-          if (_left_child->result().is_nullable() && operand.is_null) {
+          if (_left_child->result().is_nullable() && operand.is_null()) {
             return {true, T()};
           }
           bool result_value = false;
           _matcher->resolve(_expression_type == JitExpressionType::NotLike, [&](const auto& resolved_matcher) {
-            result_value = resolved_matcher(operand.value);
+            result_value = resolved_matcher(operand.value());
           });
           return {false, result_value};
         } else {

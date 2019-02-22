@@ -106,7 +106,7 @@ std::shared_ptr<const Table> JitOptimalScanOperator::_on_execute() {
         for (; chunk_offset < chunk_size; ++chunk_offset) {
           // static_cast dynamic_cast
           // const auto casted_ptr = context.inputs.front().get();
-          if (casted_ptr->read_and_get_value(context, int32_t()).value < value) {
+          if (casted_ptr->read_and_get_value(context, int32_t()).value() < value) {
             output_pos_list->emplace_back(_chunk_id, chunk_offset);
           }
         }
@@ -126,7 +126,7 @@ std::shared_ptr<const Table> JitOptimalScanOperator::_on_execute() {
 
         for (; chunk_offset < chunk_size; ++chunk_offset) {
           // static_cast dynamic_cast
-          if (casted_ptr->read_and_get_value(context, int32_t()).value < val) {
+          if (casted_ptr->read_and_get_value(context, int32_t()).value() < val) {
             output_pos_list->emplace_back(_chunk_id, chunk_offset);
           }
         }

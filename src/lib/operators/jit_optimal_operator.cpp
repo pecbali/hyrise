@@ -87,7 +87,7 @@ std::shared_ptr<const Table> JitOptimalOperator::_on_execute() {
           continue;
         }
         */
-        int value = static_cast<OwnJitSegmentReader*>(context.inputs.front().get())->read_and_get_value(context, int()).value;
+        int value = static_cast<OwnJitSegmentReader*>(context.inputs.front().get())->read_and_get_value(context, int()).value();
 
         uint64_t hash_value = std::hash<int>()(value);  // context.tuple.get<int>(a_id)
         auto& hash_bucket = hashmap.indices[hash_value];
@@ -183,7 +183,7 @@ std::shared_ptr<const Table> JitOptimalOperator::_on_execute() {
 
         */
 
-        int value = static_cast<OwnJitSegmentReader*>(context.inputs.front().get())->read_and_get_value(context, int()).value;
+        int value = static_cast<OwnJitSegmentReader*>(context.inputs.front().get())->read_and_get_value(context, int()).value();
 
         uint64_t hash_value = std::hash<int>()(value);  // context.tuple.get<int>(a_id)
         const auto it = hashmap.indices.find(hash_value);

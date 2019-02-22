@@ -16,9 +16,9 @@ namespace opossum {
 #define JIT_COMPUTE_CASE_AND_GET(r, types)                                 \
   case JIT_GET_ENUM_VALUE(0, types): {                                        \
     const auto result = _expression->compute_and_get<JIT_GET_DATA_TYPE(0, types)>(context); \
-    _expression->result().set<JIT_GET_DATA_TYPE(0, types)>(result.value, context); \
+    _expression->result().set<JIT_GET_DATA_TYPE(0, types)>(result.value(), context); \
     if (_expression->result().is_nullable()) { \
-      _expression->result().set_is_null(result.is_null, context); \
+      _expression->result().set_is_null(result.is_null(), context); \
     } \
     break; \
   }

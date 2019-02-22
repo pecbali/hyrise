@@ -28,7 +28,7 @@ JitTupleValue JitFilter::condition() { return _condition; }
 void JitFilter::_consume(JitRuntimeContext& context) const {
 #if LESS_JIT_CONTEXT
   const auto result = _expression->compute_and_get<bool>(context);
-  if ((!_expression->result().is_nullable() || !result.is_null) && result.value) {
+  if ((!_expression->result().is_nullable() || !result.is_null()) && result.value()) {
     _emit(context);
   }
   return;

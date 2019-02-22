@@ -78,12 +78,12 @@ std::shared_ptr<const Table> JitOptimalExpressionOperator::_on_execute() {
         // context.inputs.front()->read_value(context);
         // static_cast<OwnJitSegmentReader*>(context.inputs.front().get())->read_value(context);
         // const int32_t id = static_cast<OwnJitSegmentReader*>(context.inputs[0].get())->read_and_get_value(context, int32_t()).value;
-        const int32_t a = static_cast<OwnJitSegmentReader*>(context.inputs[1].get())->read_and_get_value(context, int32_t()).value;
-        const int32_t b = static_cast<OwnJitSegmentReader*>(context.inputs[2].get())->read_and_get_value(context, int32_t()).value;
-        const int32_t c = static_cast<OwnJitSegmentReader*>(context.inputs[3].get())->read_and_get_value(context, int32_t()).value;
-        const int32_t d = static_cast<OwnJitSegmentReader*>(context.inputs[4].get())->read_and_get_value(context, int32_t()).value;
-        const int32_t e = static_cast<OwnJitSegmentReader*>(context.inputs[5].get())->read_and_get_value(context, int32_t()).value;
-        const int32_t x10 = static_cast<OwnJitSegmentReader*>(context.inputs[6].get())->read_and_get_value(context, int32_t()).value;
+        const int32_t a = static_cast<OwnJitSegmentReader*>(context.inputs[1].get())->read_and_get_value(context, int32_t()).value();
+        const int32_t b = static_cast<OwnJitSegmentReader*>(context.inputs[2].get())->read_and_get_value(context, int32_t()).value();
+        const int32_t c = static_cast<OwnJitSegmentReader*>(context.inputs[3].get())->read_and_get_value(context, int32_t()).value();
+        const int32_t d = static_cast<OwnJitSegmentReader*>(context.inputs[4].get())->read_and_get_value(context, int32_t()).value();
+        const int32_t e = static_cast<OwnJitSegmentReader*>(context.inputs[5].get())->read_and_get_value(context, int32_t()).value();
+        const int32_t x10 = static_cast<OwnJitSegmentReader*>(context.inputs[6].get())->read_and_get_value(context, int32_t()).value();
         /*
 
         const auto row_tid = context.mvcc_data->tids[context.chunk_offset].load();
