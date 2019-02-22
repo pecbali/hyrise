@@ -16,6 +16,7 @@ namespace opossum {
 #define JIT_COMPUTE_CASE_AND_GET(r, types)                                 \
   case JIT_GET_ENUM_VALUE(0, types): {                                        \
     const auto result = _expression->compute_and_get<JIT_GET_DATA_TYPE(0, types)>(context); \
+    if (!result_type.is_nullable() || !result.is_null())  \
     _expression->result().set<JIT_GET_DATA_TYPE(0, types)>(result.value(), context); \
     if (_expression->result().is_nullable()) { \
       _expression->result().set_is_null(result.is_null(), context); \
@@ -92,7 +93,8 @@ void JitCompute::set_load_column(const size_t tuple_id, const std::shared_ptr<Ba
 
 void JitCompute::_consume(JitRuntimeContext& context) const {
 #if LESS_JIT_CONTEXT
-  switch (_expression->result().data_type()) {
+    const auto result_type = _expression->result();
+  switch (result_type.data_type()) {
     BOOST_PP_SEQ_FOR_EACH_PRODUCT(JIT_COMPUTE_CASE_AND_GET, (JIT_DATA_TYPE_INFO))
     case DataType::Null:
       break;
