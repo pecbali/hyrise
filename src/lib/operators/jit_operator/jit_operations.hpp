@@ -54,8 +54,10 @@ namespace opossum {
 
 #define JIT_COMPUTE_CASE_AND_GET(r, types)                                                                                   \
   case static_cast<uint8_t>(JIT_GET_ENUM_VALUE(0, types)) << 8 | static_cast<uint8_t>(JIT_GET_ENUM_VALUE(1, types)): \
-    return catching_func(left_side->compute_and_get<JIT_GET_DATA_TYPE(0, types)>(context), right_side->compute_and_get<JIT_GET_DATA_TYPE(1, types)>(context));                                                                                           \
-    break;
+  if constexpr (std::is_scalar_v<JIT_GET_DATA_TYPE(0, types)> == std::is_scalar_v<JIT_GET_DATA_TYPE(1, types)>) { \
+    return catching_func(left_side->compute_and_get<JIT_GET_DATA_TYPE(0, types)>(context), right_side->compute_and_get<JIT_GET_DATA_TYPE(1, types)>(context)); \
+    } \
+   break;
 
 #define JIT_COMPUTE_TYPE_CASE(r, types)                                                                              \
   case static_cast<uint8_t>(JIT_GET_ENUM_VALUE(0, types)) << 8 | static_cast<uint8_t>(JIT_GET_ENUM_VALUE(1, types)): \
@@ -258,6 +260,7 @@ Value<ValueType> jit_compute_and_get(const T& op_func, const std::shared_ptr<con
       // lhs or rhs is NULL
       return {true, ValueType()};
   }
+  Fail("Invalid combination of types for operation.");
 }
 
 #define JIT_COMPUTE_UNARY_CASE_AND_GET(r, types)                                 \
