@@ -163,17 +163,17 @@ TEST_F(JitOperationsTest, Predicates) {
   ASSERT_FALSE(result_value.get<bool>(context));
 
   // LIKE
-  jit_compute(jit_like, string_1, string_2, result_value, context);
+  jit_compute(old_jit_like, string_1, string_2, result_value, context);
   ASSERT_TRUE(result_value.get<bool>(context));
 
-  jit_compute(jit_like, string_1, string_3, result_value, context);
+  jit_compute(old_jit_like, string_1, string_3, result_value, context);
   ASSERT_FALSE(result_value.get<bool>(context));
 
   // NOT LIKE
-  jit_compute(jit_not_like, string_1, string_2, result_value, context);
+  jit_compute(old_jit_not_like, string_1, string_2, result_value, context);
   ASSERT_FALSE(result_value.get<bool>(context));
 
-  jit_compute(jit_not_like, string_1, string_3, result_value, context);
+  jit_compute(old_jit_not_like, string_1, string_3, result_value, context);
   ASSERT_TRUE(result_value.get<bool>(context));
 }
 

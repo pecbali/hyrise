@@ -349,37 +349,4 @@ TEST_F(JitAggregateTest, EmptyInputTableNoGroupbyColumns) {
                                 FloatComparisonMode::AbsoluteDifference));
 }
 
-TEST_F(JitAggregateTest, LimitJitAggregate) {
-  _aggregate = std::make_shared<JitLimitAggregate>();
-  _source->set_next_operator(_aggregate);
-
-  JitRuntimeContext context;
-  context.limit_rows = 1;
-  context.tuple.resize(1);
-
-  const auto value_a = JitTupleValue(DataType::Int, false, 0);
-
-  _aggregate->add_groupby_column("a", value_a);
-
-  auto output_table = _aggregate->create_output_table(Chunk::MAX_SIZE);
-  _aggregate->before_query(*_dummy_table, *output_table, context);
-
-  // Emit (1) tuple - adding row is possible as limit has not been reached yet
-  value_a.set<int32_t>(1, context);
-  _source->emit(context);
-
-  ASSERT_EQ(context.limit_rows, int64_t(0));
-
-  // Emit (2) tuple - adding row is not possible as limit has been reached
-  value_a.set<int32_t>(2, context);
-  _source->emit(context);
-
-  ASSERT_EQ(context.limit_rows, int64_t(-1));
-
-  _aggregate->after_query(*output_table, context);
-
-  EXPECT_EQ(output_table->row_count(), 1u);
-  EXPECT_EQ(output_table->get_value<int32_t>(ColumnID(0), 0u), 1);
-}
-
 }  // namespace opossum
