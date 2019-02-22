@@ -81,6 +81,7 @@ static constexpr auto DataTypeValueID = DataType::Int;
 
 template <typename T>
 struct Value {
+  using value_type = T;
   // Value<bool>(const bool is_null = false, const bool value = false) : is_null(is_null), value(value) {}
   // Value(const bool is_null = false, const Value value = Value()) : is_null(is_null), value(value) {}
   bool is_null;
