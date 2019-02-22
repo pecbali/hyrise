@@ -153,11 +153,11 @@ public:
 
     if constexpr (Nullable) {
       if (!value.is_null()) {
-        return {false, static_cast<DataType>(value.value())};
+        return {static_cast<DataType>(value.value())};
       }
-      return {true, DataType()};
+      return std::nullopt;
     } else {
-      return {false, static_cast<DataType>(value.value())};
+      return {static_cast<DataType>(value.value())};
     }
 #else
     Fail("Function should not be used without lazy load");

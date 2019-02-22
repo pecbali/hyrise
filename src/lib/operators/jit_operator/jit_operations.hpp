@@ -242,8 +242,8 @@ Value<ValueType> jit_compute_and_get(const T& op_func, const std::shared_ptr<con
   // the result.
   const auto store_result_wrapper = [&](const auto& typed_lhs, const auto& typed_rhs) -> Value<decltype(op_func(typed_lhs.value(), typed_rhs.value()), ValueType{})> {
     if (lhs.is_nullable() || rhs.is_nullable()) {
-      if (typed_lhs.is_null() || typed_rhs.is_null()) {
-        return {true, ValueType()};
+      if (!typed_lhs.has_value() || !typed_rhs.has_value()) {
+        return std::nullopt;
       }
     }
     using left_type = typename std::remove_cv_t<std::remove_reference_t<decltype(typed_lhs)>>::value_type;  //std::remove_cv_t<std::remove_reference_t<decltype(typed_lhs.value())>>;
@@ -253,7 +253,7 @@ Value<ValueType> jit_compute_and_get(const T& op_func, const std::shared_ptr<con
     if constexpr (left == right) {
       using ResultType = decltype(op_func(left_type{}, right_type{}));
       if constexpr (std::is_same_v<ValueType, ResultType>) {
-        return Value<ValueType>{false, op_func(typed_lhs.value(), typed_rhs.value())};
+        return Value<ValueType>{op_func(typed_lhs.value(), typed_rhs.value())};
       }
     }
     Fail("Requested data type and result data type mismatch.");
@@ -267,7 +267,7 @@ Value<ValueType> jit_compute_and_get(const T& op_func, const std::shared_ptr<con
     BOOST_PP_SEQ_FOR_EACH_PRODUCT(JIT_COMPUTE_CASE_AND_GET, (JIT_DATA_TYPE_INFO)(JIT_DATA_TYPE_INFO))
     default:
       // lhs or rhs is NULL
-      return {true, ValueType()};
+      return std::nullopt;
   }
   Fail("Invalid combination of types for operation.");
 }
@@ -281,16 +281,19 @@ __attribute__((always_inline)) bool _not(const bool value) { return !value; }
 template <typename T, typename = typename std::enable_if_t<!std::is_same_v<T, bool>>>
 bool _not(const T) { Fail("Operator 'NOT' only works on bool columns."); }
 
-const auto jit_is_null_and_get = [](const auto value) -> Value<bool> { return {false, value.is_null()}; };
-const auto jit_is_not_null_and_get = [](const auto value) -> Value<bool> { return {false, !value.is_null()}; };
-const auto jit_not_and_get = [](const auto value) -> Value<bool> { return {value.is_null(), _not<decltype(value.value())>(value.value())}; };
+const auto jit_is_null_and_get = [](const auto value) -> Value<bool> { return {!value.has_value()}; };
+const auto jit_is_not_null_and_get = [](const auto value) -> Value<bool> { return {value.has_value()}; };
+const auto jit_not_and_get = [](const auto value) -> Value<bool> {
+  if (!value.has_value()) return std::nullopt;
+  return {_not<decltype(value.value())>(value.value())};
+};
 
 template <typename ValueType, typename T, typename = typename std::enable_if_t<std::is_same_v<ValueType, bool>>>
 __attribute__((always_inline)) Value<bool> jit_compute_unary_and_get(const T& op_func, const std::shared_ptr<const JitExpression>& left_side, JitRuntimeContext& context) {
   switch (left_side->result().data_type()) {
     BOOST_PP_SEQ_FOR_EACH_PRODUCT(JIT_COMPUTE_UNARY_CASE_AND_GET, (JIT_DATA_TYPE_INFO))
     case DataType::Null:
-      return op_func(Value<bool>{true, false});
+      return op_func(Value<bool>{std::nullopt});
   }
 }
 
@@ -345,41 +348,46 @@ __attribute__((always_inline)) Value<bool> jit_or_get(const std::shared_ptr<cons
   const auto left_result = left_side->compute_and_get<bool>(context);
 #if JIT_LOGICAL_PRUNING
   if (lhs.is_nullable()) {
-    if (!left_result.is_null() && left_result.value()) return {false, true};
+    if (left_result.has_value() && left_result.value()) return {true};
   } else {
-    if (left_result.value()) return {false, true};
+    if (left_result.value()) return {true};
   }
 
   const auto right_result = right_side->compute_and_get<bool>(context);
   if (lhs.is_nullable()) {  // can be pruned
-    if (left_result.is_null()) {  // can not be pruned
+    if (!left_result.has_value()) {  // can not be pruned
       if (rhs.is_nullable()) {
-        return {right_result.is_null() || !right_result.value(), true};
+        if (!right_result.has_value() || !right_result.value()) return std::nullopt;
+        return {true};
       } else {
-        return {!right_result.value(), true};
+        if (!right_result.value()) return std::nullopt;
+        return {true};
       }
     }
   }
   if (rhs.is_nullable()) {
-    return {right_result.is_null(), right_result.value()};
+    if (!right_result.has_value()) return std::nullopt;
+    return {right_result.value()};
   } else {
-    return {false, right_result.value()};
+    return {right_result.value()};
   }
 #else
   const auto right_result = right_side->compute_and_get<bool>(context);
   if (lhs.is_nullable()) {  // can be pruned
     if (left_result.is_null) {  // can not be pruned
       if (rhs.is_nullable()) {
-        return {right_result.is_null() || !right_result.value(), true};
+        if (!right_result.has_value() || !right_result.value()) return std::nullopt;
+        return {true};
       } else {
         return {!right_result.value(), true};
       }
     }
   }
   if (rhs.is_nullable()) {
-    return {!left_result.value() && right_result.is_null(), left_result.value() || right_result.value};
+    if (!left_result.value() && !right_result.has_value()) return std::nullopt;
+    return {left_result.value() || right_result.value()};
   } else {
-    return {false, left_result.value() || right_result.value()};
+    return {left_result.value() || right_result.value()};
   }
 #endif
 }
@@ -393,39 +401,42 @@ __attribute__((always_inline)) Value<bool> jit_and_get(const std::shared_ptr<con
   const auto left_result = left_side->compute_and_get<bool>(context);
 #if JIT_LOGICAL_PRUNING
   if (lhs.is_nullable()) {
-    if (!left_result.is_null() && !left_result.value()) return {false, false};
+    if (left_result.has_value() && !left_result.value()) return {false};
   } else {
-    if (!left_result.value()) return {false, false};
+    if (!left_result.value()) return {false};
   }
 
   const auto right_result = right_side->compute_and_get<bool>(context);
   if (lhs.is_nullable()) {  // can be pruned
-    if (left_result.is_null()) {  // can not be pruned
+    if (!left_result.has_value()) {  // can not be pruned
       if (rhs.is_nullable()) {
-        return {right_result.is_null() || right_result.value(), false};
+        if (!right_result.has_value() || right_result.value()) return std::nullopt;
+        return {false};
       } else {
-        return {right_result.value(), false};
+        if (right_result.value()) return std::nullopt;
+        return {false};
       }
     }
   }
   if (rhs.is_nullable()) {
-    return {right_result.is_null(), right_result.value()};
+    if (!right_result.has_value()) return std::nullopt;
+    return {right_result.value()};
   } else {
-    return {false, right_result.value()};
+    return {right_result.value()};
   }
 #else
   const auto right_result = right_side->compute_and_get<bool>(context);
   if (lhs.is_nullable()) {  // can be pruned
-    if (left_result.is_null()) {  // can not be pruned
+    if (!left_result.has_value()) {  // can not be pruned
       if (rhs.is_nullable()) {
-        return {right_result.is_null() || right_result.value(), false};
+        return {!right_result.has_value() || right_result.value(), false};
       } else {
         return {right_result.value(), false};
       }
     }
   }
   if (rhs.is_nullable()) {
-    return {left_result.value() && right_result.is_null(), left_result.value() && right_result.value};
+    return {left_result.value() && !right_result.has_value(), left_result.value() && right_result.value};
   } else {
     return {false, left_result.value() && right_result.value};
   }

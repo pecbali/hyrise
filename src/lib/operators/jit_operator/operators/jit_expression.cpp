@@ -275,7 +275,7 @@ Value<T> JitExpression::compute_and_get(JitRuntimeContext& context) const {
       if (_also_set) {
         _result_value.set<T>(result.value(), context);
         if (_result_value.is_nullable()) {
-          _result_value.set_is_null(result.is_null(), context);
+          _result_value.set_is_null(!result.has_value(), context);
         }
       }
       return result;
@@ -291,11 +291,13 @@ Value<T> JitExpression::compute_and_get(JitRuntimeContext& context) const {
 #endif
     }
 #endif
-    if (_result_value.data_type() == DataType::Null) return {true, T()};
+    if (_result_value.data_type() == DataType::Null) return std::nullopt;
     if (!_disable_variant) {
-      return {_is_null, get<T>()};
+      if (_result_value.is_nullable() && _is_null) return std::nullopt;
+      return {get<T>()};
     }
-    return {_result_value.is_null(context), _result_value.get<T>(context)};
+    if (_result_value.is_nullable() && _result_value.is_null(context)) return std::nullopt;
+      return {_result_value.get<T>(context)};
   }
 
   if (!jit_expression_is_binary(_expression_type)) {
@@ -329,14 +331,14 @@ Value<T> JitExpression::compute_and_get(JitRuntimeContext& context) const {
       case JitExpressionType::NotLike: {
         if constexpr (std::is_same_v<T, bool>) {
           const auto& operand = _left_child->compute_and_get<std::string>(context);
-          if (_left_child->result().is_nullable() && operand.is_null()) {
-            return {true, T()};
+          if (_left_child->result().is_nullable() && !operand.has_value()) {
+            return std::nullopt;
           }
           bool result_value = false;
           _matcher->resolve(_expression_type == JitExpressionType::NotLike, [&](const auto& resolved_matcher) {
             result_value = resolved_matcher(operand.value());
           });
-          return {false, result_value};
+          return {result_value};
         } else {
           Fail("(NOT) LIKE always returns a bool.");
         }

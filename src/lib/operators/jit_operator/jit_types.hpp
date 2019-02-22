@@ -80,6 +80,8 @@ static constexpr auto DataTypeValueID = DataType::Int;
 
 
 template <typename ValueType>
+using Value = std::optional<ValueType>;
+/*
 struct Value : public std::optional<ValueType> {
   using value_type = ValueType;
   Value() : std::optional<ValueType>{std::nullopt} {}
@@ -91,6 +93,7 @@ struct Value : public std::optional<ValueType> {
     return !std::optional<ValueType>::has_value();
   }
 };
+*/
 
 /* A brief overview of the type system and the way values are handled in the JitOperatorWrapper:
  *
