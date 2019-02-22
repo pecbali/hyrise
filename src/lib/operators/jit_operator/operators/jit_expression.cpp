@@ -273,7 +273,9 @@ Value<T> JitExpression::compute_and_get(JitRuntimeContext& context) const {
 #if JIT_READER_WRAPPER
       const auto& result = _input_segment_wrapper->read_and_get_value(context, T());
       if (_also_set) {
-        _result_value.set<T>(result.value(), context);
+        if (!_result_value.is_nullable() || result.has_value()) {
+          _result_value.set<T>(result.value(), context);
+        }
         if (_result_value.is_nullable()) {
           _result_value.set_is_null(!result.has_value(), context);
         }
@@ -282,9 +284,11 @@ Value<T> JitExpression::compute_and_get(JitRuntimeContext& context) const {
 #else
       const auto& result = return context.inputs[_reader_index]->read_and_get_value(context, T());
       if (_also_set) {
-        _result_value.set<T>(result.value(), context);
+        if (!_result_value.is_nullable() || result.has_value()) {
+          _result_value.set<T>(result.value(), context);
+        }
         if (_result_value.is_nullable()) {
-          _result_value.set_is_null(result.is_null(), context);
+          _result_value.set_is_null(!result.has_value(), context);
         }
       }
       return result;
