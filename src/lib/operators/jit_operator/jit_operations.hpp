@@ -240,14 +240,23 @@ Value<ValueType> jit_compute_and_get(const T& op_func, const std::shared_ptr<con
 
   // This lambda calls the op_func (a lambda that performs the actual computation) with typed arguments and stores
   // the result.
-  const auto store_result_wrapper = [&](const auto& typed_lhs, const auto& typed_rhs) -> decltype(op_func(typed_lhs.value, typed_rhs.value), Value<ValueType>()) {
+  const auto store_result_wrapper = [&](const auto& typed_lhs, const auto& typed_rhs) -> Value<decltype(op_func(typed_lhs.value, typed_rhs.value), ValueType{})> {
     if (lhs.is_nullable() || rhs.is_nullable()) {
       if (typed_lhs.is_null || typed_rhs.is_null) {
-        return {true, ValueType()};
+        return {true, ValueType{}};
       }
     }
-    using ResultType = decltype(op_func(typed_lhs.value, typed_rhs.value));
-    return {false, correct_type<ValueType, ResultType>(op_func(typed_lhs.value, typed_rhs.value))};
+    using left_type = typename std::remove_cv_t<std::remove_reference_t<decltype(typed_lhs)>>::value_type;  //std::remove_cv_t<std::remove_reference_t<decltype(typed_lhs.value())>>;
+    using right_type = typename std::remove_cv_t<std::remove_reference_t<decltype(typed_rhs)>>::value_type;  //std::remove_cv_t<std::remove_reference_t<decltype(typed_rhs.value())>>;
+    constexpr bool left = std::is_scalar_v<left_type>;
+    constexpr bool right = std::is_scalar_v<right_type>;
+    if constexpr (left == right) {
+      using ResultType = decltype(op_func(left_type{}, right_type{}));
+      if constexpr (std::is_same_v<ValueType, ResultType>) {
+        return {false, correct_type<ValueType, ResultType>(op_func(typed_lhs.value, typed_rhs.value))};
+      }
+    }
+    Fail("Requested data type and result data type mismatch.");
   };
 
   const auto catching_func = InvalidTypeCatcher<decltype(store_result_wrapper), Value<ValueType>>(store_result_wrapper);
