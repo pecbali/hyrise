@@ -84,7 +84,7 @@ void JitCompute::set_load_column(const size_t tuple_id, const std::shared_ptr<Ba
     if (current->expression_type() == JitExpressionType::Column) {
       const auto tuple_index = current->result().tuple_index();
       if (tuple_id == tuple_index) {
-        current->set_load_column(_input_segment_wrapper, counter || also_set);
+        current->set_load_column(_input_segment_wrapper, counter > 1 || also_set);
         return;
       }
     }
