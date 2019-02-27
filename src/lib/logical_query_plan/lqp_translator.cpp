@@ -319,12 +319,12 @@ std::shared_ptr<AbstractOperator> LQPTranslator::_translate_join_node(
     pqp = std::make_shared<JoinSortMerge>(
         input_left_operator, input_right_operator, join_node->join_mode, primary_join_predicate.column_ids,
         primary_join_predicate.predicate_condition);
-  } 
+  }
 
   std::vector<std::shared_ptr<AbstractExpression>> secondary_expressions{join_node->join_predicates().cbegin() + 1, join_node->join_predicates().end()};
 
   for (const auto& secondary_expression : secondary_expressions) {
-    pqp = std::make_shared<TableScan>(pqp, _translate_expression(*secondary_expression));
+    pqp = std::make_shared<TableScan>(pqp, _translate_expression(*secondary_expression, *join_node));
   }
 
   return pqp;
