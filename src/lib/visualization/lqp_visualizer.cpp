@@ -80,8 +80,8 @@ void LQPVisualizer::_build_dataflow(const std::shared_ptr<AbstractLQPNode>& from
   double pen_width;
 
   try {
-    row_count = from->get_statistics()->row_count();
-    pen_width = std::fmax(1, std::ceil(std::log10(row_count) / 2));
+    row_count = 0.0f; // from->get_statistics()->row_count();
+    pen_width = 1.0f; // std::fmax(1, std::ceil(std::log10(row_count) / 2));
   } catch (...) {
     // statistics don't exist for this edge
     row_count = NAN;
@@ -90,11 +90,11 @@ void LQPVisualizer::_build_dataflow(const std::shared_ptr<AbstractLQPNode>& from
 
   if (from->left_input()) {
     try {
-      float input_count = from->left_input()->get_statistics()->row_count();
-      if (from->right_input()) {
-        input_count *= from->right_input()->get_statistics()->row_count();
-      }
-      row_percentage = 100 * row_count / input_count;
+//      float input_count = 0.0f; //from->left_input()->get_statistics()->row_count();
+//      if (from->right_input()) {
+//        input_count *= 0.0f; //from->right_input()->get_statistics()->row_count();
+//      }
+      row_percentage = 0.0f; //100 * row_count / input_count;
     } catch (...) {
       // Couldn't create statistics. Using default value of 100%
     }
