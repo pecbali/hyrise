@@ -296,7 +296,6 @@ std::shared_ptr<AbstractOperator> LQPTranslator::_translate_join_node(
   Assert(!join_node->join_predicates().empty(), "Need predicate for non Cross Join");
 
   std::vector<OperatorJoinPredicate> join_predicates;
-
   for (const auto& predicate_expression : join_node->join_predicates()) {
     auto join_predicate =
         OperatorJoinPredicate::from_expression(*predicate_expression, *node->left_input(), *node->right_input());
@@ -307,22 +306,28 @@ std::shared_ptr<AbstractOperator> LQPTranslator::_translate_join_node(
   }
 
   const auto& primary_join_predicate = join_predicates.front();
-  std::vector<OperatorJoinPredicate> secondary_join_predicates(join_predicates.cbegin() + 1, join_predicates.cend());
+  //std::vector<OperatorJoinPredicate> secondary_join_predicates(join_predicates.cbegin() + 1, join_predicates.cend());
+
+  auto pqp = std::shared_ptr<AbstractOperator>{};
 
   if (primary_join_predicate.predicate_condition == PredicateCondition::Equals &&
       join_node->join_mode != JoinMode::Outer) {
-    return std::make_shared<JoinHash>(input_left_operator, input_right_operator, join_node->join_mode,
+    pqp = std::make_shared<JoinHash>(input_left_operator, input_right_operator, join_node->join_mode,
                                       primary_join_predicate.column_ids, primary_join_predicate.predicate_condition,
-                                      std::nullopt, std::move(secondary_join_predicates));
-  } else if (primary_join_predicate.predicate_condition != PredicateCondition::Equals &&
-             secondary_join_predicates.empty()) {
-    return std::make_shared<JoinSortMerge>(
+                                      std::nullopt);
+  } else if (primary_join_predicate.predicate_condition != PredicateCondition::Equals) {
+    pqp = std::make_shared<JoinSortMerge>(
         input_left_operator, input_right_operator, join_node->join_mode, primary_join_predicate.column_ids,
-        primary_join_predicate.predicate_condition, std::move(secondary_join_predicates));
+        primary_join_predicate.predicate_condition);
+  } 
+
+  std::vector<std::shared_ptr<AbstractExpression>> secondary_expressions{join_node->join_predicates().cbegin() + 1, join_node->join_predicates().end()};
+
+  for (const auto& secondary_expression : secondary_expressions) {
+    pqp = std::make_shared<TableScan>(pqp, _translate_expression(*secondary_expression));
   }
 
-  // WIP: Extend JoinSortMerge to support multiple predicates.
-  Fail("JoinSortMerge with multiple predicates is not supported at this time.");
+  return pqp;
 }
 
 std::shared_ptr<AbstractOperator> LQPTranslator::_translate_aggregate_node(
