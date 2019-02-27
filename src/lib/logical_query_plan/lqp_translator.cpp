@@ -324,7 +324,7 @@ std::shared_ptr<AbstractOperator> LQPTranslator::_translate_join_node(
   std::vector<std::shared_ptr<AbstractExpression>> secondary_expressions{join_node->join_predicates().cbegin() + 1, join_node->join_predicates().end()};
 
   for (const auto& secondary_expression : secondary_expressions) {
-    pqp = std::make_shared<TableScan>(pqp, _translate_expression(*secondary_expression, *join_node));
+    pqp = std::make_shared<TableScan>(pqp, _translate_expression(*secondary_expression, join_node));
   }
 
   return pqp;
