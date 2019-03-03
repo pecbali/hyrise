@@ -312,7 +312,7 @@ std::shared_ptr<AbstractOperator> LQPTranslator::_translate_join_node(
 
   if (primary_join_predicate.predicate_condition == PredicateCondition::Equals &&
       join_node->join_mode != JoinMode::FullOuter) {
-    return std::make_shared<JoinHash>(input_left_operator, input_right_operator, join_node->join_mode,
+    pqp =  std::make_shared<JoinHash>(input_left_operator, input_right_operator, join_node->join_mode,
                                       primary_join_predicate.column_ids, primary_join_predicate.predicate_condition,
                                       std::nullopt);
   } else if (primary_join_predicate.predicate_condition != PredicateCondition::Equals) {
@@ -322,8 +322,9 @@ std::shared_ptr<AbstractOperator> LQPTranslator::_translate_join_node(
   }
 
   if (join_node->join_predicates().size() > 1) {
-    std::vector<std::shared_ptr<AbstractExpression>> secondary_expressions{join_node->join_predicates().cbegin() + 1,
-                                                                           join_node->join_predicates().end()};
+    const auto join_predicates = join_node->join_predicates();	  
+    std::vector<std::shared_ptr<AbstractExpression>> secondary_expressions{join_predicates.cbegin() + 1,
+                                                                           join_predicates.cend()};
 
     for (const auto &secondary_expression : secondary_expressions) {
       pqp = std::make_shared<TableScan>(pqp, _translate_expression(secondary_expression, join_node));

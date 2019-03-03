@@ -18,6 +18,7 @@ def format_diff(diff):
 		return colored("{0:.0%}".format(diff), 'red')
 
 def calculate_and_format_p_value(old, new):
+	return ""
 	p_value = ttest_ind(array('d', old['iteration_durations']), array('d', new['iteration_durations']))[1]
 	is_significant = p_value < p_value_significance_threshold
 
